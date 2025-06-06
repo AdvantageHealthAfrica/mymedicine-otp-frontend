@@ -39,6 +39,7 @@ interface User {
 const HomePage = () => {
   const [activeTab, setActiveTab] = useState("request");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [message, setMessage] = useState<Message>({ type: "", text: "" });
 
   // Request OTP State
@@ -93,7 +94,6 @@ const HomePage = () => {
 
     setIsLoading(true);
     try {
-      // Replace with your actual endpoint
       const response = await fetch(
         "https://mymedicines-api-xwipe.ondigitalocean.app/v1/otp/generate",
         {
@@ -112,8 +112,13 @@ const HomePage = () => {
           `OTP requested successfully for ${requestEmail}`
         );
         setRequestEmail("");
-
-        setRequestOTPData(data);
+        setRequestOTPData({
+          email: data.email,
+          token: data.token,
+          id: data.id,
+          createdAt: data.createdAt,
+          expiresAt: data.expiresAt,
+        });
       } else {
         showMessage("error", "Failed to request OTP");
       }
@@ -166,14 +171,13 @@ const HomePage = () => {
   // Send OTP Handler
   const handleSendOTP = async (e: FormEvent) => {
     e.preventDefault();
-    if (!sendToken) {
+    if (!requestOTPData.token) {
       showMessage("error", "Please enter OTP code");
       return;
     }
 
-    setIsLoading(true);
+    setIsSending(true);
     try {
-      // Replace with your actual endpoint
       const response = await fetch(
         "https://mymedicines-api-xwipe.ondigitalocean.app/v1/otp/send-email",
         {
@@ -182,21 +186,27 @@ const HomePage = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            token: sendToken,
+            token: requestOTPData.token,
           }),
         }
       );
 
       if (response.ok) {
         showMessage("success", `OTP sent successfully`);
-        setSendToken("");
+        setRequestOTPData({
+          email: "",
+          token: "",
+          id: "",
+          createdAt: "",
+          expiresAt: "",
+        });
       } else {
         showMessage("error", "Failed to send OTP");
       }
     } catch (error) {
       showMessage("error", "Network error occurred");
     } finally {
-      setIsLoading(false);
+      setIsSending(false);
     }
   };
 
@@ -248,11 +258,11 @@ const HomePage = () => {
     { id: "request", label: "Request OTP", icon: Key },
     { id: "send", label: "Send OTP", icon: Send },
     { id: "verify", label: "Verify OTP", icon: CheckCircle },
-    { id: "view", label: "View Data", icon: Users },
+    // { id: "view", label: "View Data", icon: Users },
   ];
 
   return (
-    <div className="min-h-screen bg-[#FFF4EF] p-4 sm:p-6">
+    <div className="relative min-h-screen bg-[#FFF4EF] p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -383,7 +393,7 @@ const HomePage = () => {
                       <p className="text-gray-600 font-bold">
                         {requestOTPData.email}
                       </p>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-10">
                         <p className="text-gray-600 font-bold">
                           {requestOTPData.token}
                         </p>
@@ -407,20 +417,50 @@ const HomePage = () => {
                         )}
                       </div>
                     </div>
+
+                    {requestOTPData.token && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Send className="text-[#DE4C27]" size={20} />
+                          <h3 className="text-lg font-medium text-gray-800">
+                            Send OTP
+                          </h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">
+                          Send this OTP to the user's email address
+                        </p>
+                        <button
+                          onClick={handleSendOTP}
+                          disabled={isLoading}
+                          className="w-full bg-[#DE4C27] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#DE4C27]/75 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          {isLoading ? (
+                            <RefreshCw className="animate-spin" size={20} />
+                          ) : (
+                            <Send size={20} />
+                          )}
+                          {isLoading ? "Sending..." : "Send OTP"}
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  <button
-                    onClick={handleRequestOTP}
-                    disabled={isLoading}
-                    className="w-full bg-[#DE4C27] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#DE4C27]/75 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isLoading ? (
-                      <RefreshCw className="animate-spin" size={20} />
-                    ) : (
-                      <Key size={20} />
-                    )}
-                    {isLoading ? "Requesting..." : "Request OTP"}
-                  </button>
+                  {isSending ? (
+                    ""
+                  ) : (
+                    <button
+                      onClick={handleRequestOTP}
+                      disabled={isLoading}
+                      className="w-full bg-[#DE4C27] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#DE4C27]/75 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isLoading ? (
+                        <RefreshCw className="animate-spin" size={20} />
+                      ) : (
+                        <Key size={20} />
+                      )}
+                      {isLoading ? "Requesting..." : "Request OTP"}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -458,15 +498,15 @@ const HomePage = () => {
 
                   <button
                     onClick={handleSendOTP}
-                    disabled={isLoading}
+                    disabled={isSending}
                     className="w-full bg-[#DE4C27] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#DE4C27]/75 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {isLoading ? (
+                    {isSending ? (
                       <RefreshCw className="animate-spin" size={20} />
                     ) : (
                       <Send size={20} />
                     )}
-                    {isLoading ? "Sending..." : "Send OTP"}
+                    {isSending ? "Sending..." : "Send OTP"}
                   </button>
                 </div>
               </div>
@@ -525,7 +565,7 @@ const HomePage = () => {
                   </div>
 
                   <button
-                    onClick={handleSendOTP}
+                    onClick={handleVerifyOTP}
                     disabled={isLoading}
                     className="w-full bg-[#DE4C27] text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
@@ -534,7 +574,7 @@ const HomePage = () => {
                     ) : (
                       <Send size={20} />
                     )}
-                    {isLoading ? "Sending..." : "Send OTP"}
+                    {isLoading ? "Verifying..." : "Verify OTP"}
                   </button>
                 </div>
               </div>
@@ -543,7 +583,7 @@ const HomePage = () => {
             {/* View Data Tab */}
             {activeTab === "view" && (
               <div>
-                <div className="text-center mb-8">
+                {/* <div className="text-center mb-8">
                   <div className="w-16 h-16 bg-[#FFF4EF] rounded-full flex items-center justify-center mx-auto mb-4">
                     <Users className="text-[#DE4C27]" size={32} />
                   </div>
@@ -553,9 +593,9 @@ const HomePage = () => {
                   <p className="text-gray-600">
                     View all generated OTPs and eligible users
                   </p>
-                </div>
+                </div> */}
 
-                <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                {/* <div className="flex flex-col sm:flex-row gap-4 mb-8">
                   <button
                     onClick={fetchOTPData}
                     disabled={isLoading}
@@ -580,10 +620,10 @@ const HomePage = () => {
                     )}
                     Refresh Eligible Users
                   </button>
-                </div>
+                </div> */}
 
                 {/* OTP Data Table */}
-                <div className="mb-8">
+                {/* <div className="mb-8">
                   <h3 className="text-xl font-semibold text-gray-800 mb-4">
                     Generated OTPs
                   </h3>
@@ -653,10 +693,10 @@ const HomePage = () => {
                       </tbody>
                     </table>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Eligible Users Table */}
-                <div>
+                {/* <div>
                   <h3 className="text-xl font-semibold text-gray-800 mb-4">
                     Eligible Users
                   </h3>
@@ -726,7 +766,7 @@ const HomePage = () => {
                       </tbody>
                     </table>
                   </div>
-                </div>
+                </div> */}
               </div>
             )}
           </div>
