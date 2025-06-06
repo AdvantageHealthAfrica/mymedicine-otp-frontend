@@ -445,7 +445,7 @@ const HomePage = () => {
                     )}
                   </div>
 
-                  {isSending ? (
+                  {requestOTPData.token ? (
                     ""
                   ) : (
                     <button
