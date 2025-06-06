@@ -4,15 +4,18 @@ import React from "react";
 
 const Logo = () => {
   return (
-    <Link href="/" className="flex items-center sticky top-5">
+    <Link
+      href="/"
+      className="flex items-center justify-center mb-20 sticky top-5"
+    >
       <Image
         src={
           "https://res.cloudinary.com/ddynvenje/image/upload/v1749205137/AHA/AHA-logo_vfsmvr.png"
         }
         alt="Logo"
         width={200}
-        height={100}
-        className="w-60 h-26"
+        height={200}
+        className="w-32 h-32"
       />
     </Link>
   );
