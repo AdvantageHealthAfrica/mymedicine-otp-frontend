@@ -7,7 +7,7 @@ const Logo = () => {
     <Link href="/" className="flex items-center sticky top-5">
       <Image
         src={
-          "https://res.cloudinary.com/ddynvenje/image/upload/v1749191192/AHA/Aha_logo_round_g6uapm.svg"
+          "https://res.cloudinary.com/ddynvenje/image/upload/v1749205137/AHA/AHA-logo_vfsmvr.png"
         }
         alt="Logo"
         width={200}
