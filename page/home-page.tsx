@@ -166,7 +166,7 @@ const HomePage = () => {
   // Send OTP Handler
   const handleSendOTP = async (e: FormEvent) => {
     e.preventDefault();
-    if (!otpCode) {
+    if (!sendToken) {
       showMessage("error", "Please enter OTP code");
       return;
     }
